@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pipi counter</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1c2230;--mute:#7a8296;--accent:#2f7df6;--accent2:#5fb0ff;--bar:#cfe0fb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10131a;--card:#1a1f2b;--ink:#eef1f8;--mute:#8d96ab;--accent:#4b94ff;--accent2:#2a64c4;--bar:#27406b}}
+:root[data-theme="dark"]{--bg:#10131a;--card:#1a1f2b;--ink:#eef1f8;--mute:#8d96ab;--accent:#4b94ff;--accent2:#2a64c4;--bar:#27406b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;padding:16px;gap:14px;user-select:none;-webkit-user-select:none}
+header{display:flex;justify-content:space-between;align-items:center;color:var(--mute);font-size:15px}
+#tap{flex:1;min-height:220px;border:0;border-radius:32px;background:linear-gradient(160deg,var(--accent),var(--accent2));color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:transform .08s}
+#tap:active{transform:scale(.97)}
+#count{font-size:min(38vw,170px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+#sub{font-size:17px;opacity:.9}
+.row{display:flex;gap:10px}
+.card{background:var(--card);border-radius:20px;padding:14px 16px}
+#last{flex:1;font-size:15px;color:var(--mute)}
+#last b{color:var(--ink)}
+#undo{border:0;background:var(--card);color:var(--ink);border-radius:20px;padding:0 20px;font-size:16px;cursor:pointer}
+#undo:active{opacity:.6}
+#hist{display:flex;gap:8px;align-items:flex-end;height:90px}
+.d{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;font-size:12px;color:var(--mute)}
+.d i{display:block;width:100%;background:var(--bar);border-radius:6px;min-height:3px}
+.d.t i{background:var(--accent)}
+.d span.n{color:var(--ink);font-weight:600;font-size:13px}
+</style>
+</head>
+<body>
+<header><span id="date"></span><span>Pipi counter</span></header>
+<button id="tap" aria-label="Ajouter un pipi"><div id="count">0</div><div id="sub">pipi aujourd’hui · tape pour ajouter</div></button>
+<div class="row"><div class="card" id="last">—</div><button id="undo">Annuler</button></div>
+<div class="card"><div id="hist"></div></div>
+<script>
+(function(){
+var K='pipi-v1',data={};
+try{data=JSON.parse(localStorage.getItem(K)||'{}')||{}}catch(e){data={}}
+function save(){try{localStorage.setItem(K,JSON.stringify(data))}catch(e){}}
+function key(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function hm(t){var d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+var J=['D','L','M','M','J','V','S'];
+function render(){
+var today=data[key()]||[];
+document.getElementById('count').textContent=today.length;
+document.getElementById('date').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+document.getElementById('last').innerHTML=today.length?'Dernier à <b>'+hm(today[today.length-1])+'</b>':'Aucun pour l’instant';
+var days=[],max=1,i,d,k,n;
+for(i=6;i>=0;i--){d=new Date();d.setDate(d.getDate()-i);k=key(d);n=(data[k]||[]).length;max=Math.max(max,n);days.push({d:d,n:n,t:i===0})}
+document.getElementById('hist').innerHTML=days.map(function(x){return '<div class="d'+(x.t?' t':'')+'"><span class="n">'+x.n+'</span><i style="height:'+Math.round(x.n/max*60)+'%"></i><span>'+J[x.d.getDay()]+'</span></div>'}).join('');
+}
+document.getElementById('tap').addEventListener('click',function(){
+var k=key();(data[k]=data[k]||[]).push(Date.now());save();
+try{navigator.vibrate&&navigator.vibrate(20)}catch(e){}
+render();
+});
+document.getElementById('undo').addEventListener('click',function(){
+var a=data[key()];if(a&&a.length){a.pop();save();render()}
+});
+render();
+})();
+</script>
+</body>
+</html>
